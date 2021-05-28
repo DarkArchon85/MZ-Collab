@@ -37,33 +37,6 @@ Imported["LvMZ_SirLegna_GTBS"] = true;
  * @desc Get the follower ID (or 0 for Player) to control.
  * @default 0
  *
- * @ --------------------------------------------------------------------------
- *
- * @command setFollowerCtrl
- * @text Toggle Follower Control
- *
- * @arg ctrl
- * @text Manual Control Override
- * @type boolean
- * @on Enable Manual Control
- * @off Disable Control (default)
- * @desc Toggle manual follower control.
- * @default false
- *
- * @ --------------------------------------------------------------------------
- *
- * @command setFollower
- * @text Set Follower
- * @desc Sets the follower (or player) to control
- *
- * @arg id
- * @text Follower ID
- * @type number
- * @decimals 0
- * @min 0
- * @desc Get the follower ID (or 0 for Player) to control.
- * @default 0
- *
  *
  * @help
  * ----------------------------------------------------------------------------
