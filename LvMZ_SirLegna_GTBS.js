@@ -25,7 +25,7 @@ Imported["LvMZ_SirLegna_GTBS"] = true;
  * @parent Movement Grid
  * @desc Define the search limit for Game Characters when using Movement Grid. Zero or less use RPGMZ default (12)
  * @default 0
- * @type multiline_string'
+ * @type multiline_string
  *
  * @ --------------------------------------------------------------------------
  * Plugin Commands
