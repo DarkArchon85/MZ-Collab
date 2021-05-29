@@ -135,10 +135,7 @@ Game_CharacterBase.prototype.isCollidedWithFollowers = function(x, y) {
 };
 
 Game_CharacterBase.prototype.isCollidedWithPlayer = function(x, y) {
-	if (this.isFollower()) {
-		return $gamePlayer.posNt(x, y);
-	}
-	return false;
+	return this.isFollower() && $gamePlayer.posNt(x, y);
 };
 
 // --- GAME FOLLOWER ---
