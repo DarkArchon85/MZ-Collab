@@ -6,6 +6,7 @@
 var Imported = Imported || {};
 Imported["LvMZ_SirLegna_GTBS"] = true;
 
+
 /*:
  * @target MZ
  * @plugindesc [v1.0] 
@@ -115,7 +116,7 @@ Game_Character.prototype.getDistanceFrom = function(goalX, goalY) {
 
         if (current.x === goalX && current.y === goalY) {
             best = current;
-            return (this.x == goalX || this.y == goalY ? closedList.length-1 : closedList.length/2);
+            return best.f//(this.x == goalX || this.y == goalY ? openList.length : openList.length);
         }
 
         if (g1 >= searchLimit) {
@@ -165,6 +166,57 @@ Game_Character.prototype.getDistanceFrom = function(goalX, goalY) {
 //
 // The game object class movement on the Battle Grid
 
+/******************************************************************************
+	rmmv_managers.js
+******************************************************************************/
+
+/******************************************************************************
+	rmmv_objects.js
+******************************************************************************/
+
+Game_Character.prototype.searchLimit = (function(){
+	var searchLimit = Game_Character.prototype.searchLimit;
+	return function(){
+		var originalResult = searchLimit.apply(this,arguments);
+		return movementSearchLimitFlag ? lvParams["MovementGrid.maxSize"] || originalResult : originalResult;
+	}
+})();
+
+//Will most likely change this or clone it
+Game_Player.prototype.moveByInput = function() {
+    if (!this.isMoving() && this.canMove()) {
+        let direction = this.getInputDirection();
+        if (direction > 0) {
+            $gameTemp.clearDestination();
+        } else if ($gameTemp.isDestinationValid()) {
+            const x = $gameTemp.destinationX();
+            const y = $gameTemp.destinationY();
+            direction = this.findDirectionTo(x, y);
+        }
+        if (direction > 0) {
+            this.executeMove(direction);
+        }
+    }
+};
+
+/******************************************************************************
+	rmmv_scenes.js
+******************************************************************************/
+
+/******************************************************************************
+	rmmv_sprites.js
+******************************************************************************/
+
+/******************************************************************************
+	rmmv_windows.js
+******************************************************************************/
+
+})();
+
+
+/******************************************************************************
+	BattleGrid_Movement Class
+******************************************************************************/
 function BattleGrid_Movement() {
     this.initialize(...arguments);
 }
@@ -212,60 +264,21 @@ Returns a gridObject
 BattleGrid_Movement.prototype.calculateGrid = function(){
 	this._grid = []
 	movementSearchLimitFlag = true;
-	for (let x = this._unit.x - this._dist; x < this._unit.x + this._dist; x++){
-		for (let y = this._unit.y - this._dist; y < this._unit.y + this._dist; y++){
-			if (this._dist > this._unit.getDistanceFrom(x,y) && this._unit.getDistanceFrom(x,y) >= 0){
+	for (let x = this._unit.x - this._dist; x <= this._unit.x + this._dist; x++){
+		for (let y = this._unit.y - this._dist; y <= this._unit.y + this._dist; y++){
+			if (this.inGrid(x,y)){
 				this._grid.push([x,y])
+				$dataMap.data[(1 * $dataMap.height + y) * $dataMap.width + x] = 6
+			}
+			else{
+				$dataMap.data[(1 * $dataMap.height + y) * $dataMap.width + x] = 0
 			}
 		}
 	}
-	console.log(this._grid)
 	movementSearchLimitFlag = false;	
 }
 
-/******************************************************************************
-	rmmv_managers.js
-******************************************************************************/
-
-/******************************************************************************
-	rmmv_objects.js
-******************************************************************************/
-
-Game_Character.prototype.searchLimit = (function(){
-	var searchLimit = Game_Character.prototype.searchLimit;
-	return function(){
-		var originalResult = searchLimit.apply(this,arguments);
-		return movementSearchLimitFlag ? lvParams["MovementGrid.maxSize"] || originalResult : originalResult;
-	}
-})();
-
-//Will most likely change this or clone it
-Game_Player.prototype.moveByInput = function() {
-    if (!this.isMoving() && this.canMove()) {
-        let direction = this.getInputDirection();
-        if (direction > 0) {
-            $gameTemp.clearDestination();
-        } else if ($gameTemp.isDestinationValid()) {
-            const x = $gameTemp.destinationX();
-            const y = $gameTemp.destinationY();
-            direction = this.findDirectionTo(x, y);
-        }
-        if (direction > 0) {
-            this.executeMove(direction);
-        }
-    }
-};
-
-/******************************************************************************
-	rmmv_scenes.js
-******************************************************************************/
-
-/******************************************************************************
-	rmmv_sprites.js
-******************************************************************************/
-
-/******************************************************************************
-	rmmv_windows.js
-******************************************************************************/
-
-})();
+BattleGrid_Movement.prototype.inGrid = function(x,y){
+	distanceAway = this._unit.getDistanceFrom(x,y)
+	return this._dist >= distanceAway && distanceAway >= 0
+}
