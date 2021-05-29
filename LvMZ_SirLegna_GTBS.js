@@ -16,12 +16,11 @@ Imported["LvMZ_SirLegna_GTBS"] = true;
  * @param Movement Grid
  *
  * @param MovementGrid.maxSize
- * @text Maximum Search Area for Grid
+ * @text Maximum Search Area for Grid (JS-Number)
  * @parent Movement Grid
- * @desc Define the search limit for Game Characters when using Movement Grid in this plugin
+ * @desc Define the search limit for Game Characters when using Movement Grid. Zero or less use RPGMZ default (12)
  * @default 0
- * @type number
- * @min 0
+ * @type multiline_string
  *
  *
  * @help
@@ -58,13 +57,15 @@ Imported["LvMZ_SirLegna_GTBS"] = true;
 	plugin structs
 ******************************************************************************/
 
+/******************************************************************************
+	private
+******************************************************************************/
+
 (() => {
 'use strict';
 
 const pluginName = 'LvMZ_SirLegna_GTBS';
 const lvParams = PluginManager.parameters(pluginName);
-
-let movementSearchLimitFlag = false;
 
 /******************************************************************************
 	plugin commands
@@ -178,7 +179,7 @@ Game_Character.prototype.searchLimit = (function(){
 	var searchLimit = Game_Character.prototype.searchLimit;
 	return function(){
 		var originalResult = searchLimit.apply(this,arguments);
-		return movementSearchLimitFlag ? lvParams["MovementGrid.maxSize"] || originalResult : originalResult;
+		return movementSearchLimitFlag ? betterEval(lvParams["MovementGrid.maxSize"],Number) || originalResult : originalResult;
 	}
 })();
 
@@ -212,6 +213,17 @@ Game_Player.prototype.moveByInput = function() {
 ******************************************************************************/
 
 })();
+
+
+/******************************************************************************
+	public 
+******************************************************************************/
+
+let movementSearchLimitFlag = false;
+
+betterEval = function(funString, expectedType, args=[]){
+	return expectedType(new Function("return " + funString)(...args))
+}
 
 
 /******************************************************************************
