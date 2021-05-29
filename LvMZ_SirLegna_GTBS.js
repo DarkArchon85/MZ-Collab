@@ -121,11 +121,22 @@ PluginManager.registerCommand(pluginName, 'setFollower', args => {
 	plugin specific functions and classes
 ******************************************************************************/
 
+//-----------------------------------------------------------------------------
+// BattleGrid_Movement
+//
+// The game object class movement on the Battle Grid
+
 /******************************************************************************
-	plugin specific functions and classes
+	rmmv_managers.js
 ******************************************************************************/
 
-Game_Character.prototype.getDistanceFrom = function(goalX, goalY) {
+/******************************************************************************
+	rmmv_objects.js
+******************************************************************************/
+
+// --- CHARACTER ---
+//Custom - Calculates the distance between a Game_Character and a goal Tile; returns distance or -1 if not possible
+Game_Character.prototype.getDistanceFrom = function(goalX, goalY) { //Custom
     const searchLimit = this.searchLimit();
     const mapWidth = $gameMap.width();
     const nodeList = [];
@@ -211,21 +222,8 @@ Game_Character.prototype.getDistanceFrom = function(goalX, goalY) {
 	return -1;
 }
 
-//-----------------------------------------------------------------------------
-// BattleGrid_Movement
-//
-// The game object class movement on the Battle Grid
-
-/******************************************************************************
-	rmmv_managers.js
-******************************************************************************/
-
-/******************************************************************************
-	rmmv_objects.js
-******************************************************************************/
-
-// --- CHARACTER ---
-Game_Character.prototype.searchLimit = (function(){
+//Alias - Uses MovementGrid.maxSize if the movementSearchLimitFlag is true else uses default
+Game_Character.prototype.searchLimit = (function(){ //Alias
 	var searchLimit = Game_Character.prototype.searchLimit;
 	return function(){
 		var originalResult = searchLimit.apply(this,arguments);
@@ -341,8 +339,10 @@ Game_Interpreter.prototype.character = function(param) {
 	public 
 ******************************************************************************/
 
+// - Flag to overwrite the SearchLimit when using Movement Grid -
 let movementSearchLimitFlag = false;
 
+// - Better Eval function, takes in a string, the expected type and optional arguments and return the eval - 
 betterEval = function(funString, expectedType, args=[]){
 	return expectedType(new Function("return " + funString)(...args))
 }
@@ -378,12 +378,14 @@ Object.defineProperties(BattleGrid_Movement.prototype, {
 	},
 });
 
+//Defaults values
 BattleGrid_Movement.prototype.initialize = function() {
 	this._unit = null;
 	this._dist = 0;
 	this._grid = [];
 };
 
+//Quick setUp for both unit and distance however can use get
 BattleGrid_Movement.prototype.setUp = function(unit, distance){
 	this._unit = unit;
 	this._dist = distance;
@@ -391,9 +393,9 @@ BattleGrid_Movement.prototype.setUp = function(unit, distance){
 
 /*Creates a grid object based of the unit's position and max distance around them.
 Requirements for Unit:
-* Must have x and y parameters defined as TODO
-* Must have a movement function defined as TODO
-Returns a gridObject
+* Must be subClass of Game_Character
+Set's the _grid object
+Renders Grid using TileB index 6
 */
 BattleGrid_Movement.prototype.calculateGrid = function(){
 	this._grid = []
@@ -412,6 +414,7 @@ BattleGrid_Movement.prototype.calculateGrid = function(){
 	movementSearchLimitFlag = false;	
 }
 
+//Calculates if x and y are within maximum distance from the unit
 BattleGrid_Movement.prototype.inGrid = function(x,y){
 	distanceAway = this._unit.getDistanceFrom(x,y)
 	return this._dist >= distanceAway && distanceAway >= 0
