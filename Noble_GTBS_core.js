@@ -12,7 +12,7 @@ Imported["Noble_GTBS_core"] = true;
  * @plugindesc [v1.0] 
  * @author LordValinar, SirLegna
  * @url 
- *
+ * @orderBefore Noble_GTBS_main
  *
  * @ --------------------------------------------------------------------------
  * Plugin Parameters

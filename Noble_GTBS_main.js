@@ -12,6 +12,9 @@ Imported["Noble_GTBS_main"] = true;
  * @plugindesc [v1.0] 
  * @author LordValinar, SirLegna
  * @url 
+ * @base Noble_GTBS_core
+ * @orderAfter Noble_GTBS_core
+ *
  *
  *
  * @ --------------------------------------------------------------------------
