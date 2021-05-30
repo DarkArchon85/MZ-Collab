@@ -134,6 +134,34 @@ PluginManager.registerCommand(pluginName, 'setFollower', args => {
 	rmmv_objects.js
 ******************************************************************************/
 
+// --- CHARACTER BASE ---
+Game_CharacterBase.prototype.isFollower = function() {
+	return false;
+};
+
+const gameCharBase_collidedWithChars = Game_CharacterBase.prototype.isCollidedWithCharacters;
+Game_CharacterBase.prototype.isCollidedWithCharacters = function(x, y) {
+	if (this.isCollidedWithFollowers(x, y)) return true;
+	if (this.isCollidedWithPlayer(x, y)) return true;
+	return gameCharBase_collidedWithChars.call(this, x, y);
+}
+
+// New - Additional collision detections
+Game_CharacterBase.prototype.isCollidedWithFollowers = function(x, y) {
+	if (!this.isFollower()) {
+		const f = $gamePlayer._followers._data;
+		for (let i = 0; i < f.length; i++) {
+			if (f[i].posNt(x, y)) return true;
+		}
+	}
+	return false;
+};
+
+Game_CharacterBase.prototype.isCollidedWithPlayer = function(x, y) {
+	return this.isFollower() && $gamePlayer.posNt(x, y);
+};
+
+
 // --- CHARACTER ---
 //Custom - Calculates the distance between a Game_Character and a goal Tile; returns distance or -1 if not possible
 Game_Character.prototype.getDistanceFrom = function(goalX, goalY) { //Custom
@@ -231,32 +259,6 @@ Game_Character.prototype.searchLimit = (function(){ //Alias
 	}
 })();
 
-// --- CHARACTER BASE ---
-Game_CharacterBase.prototype.isFollower = function() {
-	return false;
-};
-
-const gameCharBase_collidedWithChars = Game_CharacterBase.prototype.isCollidedWithCharacters;
-Game_CharacterBase.prototype.isCollidedWithCharacters = function(x, y) {
-	if (this.isCollidedWithFollowers(x, y)) return true;
-	if (this.isCollidedWithPlayer(x, y)) return true;
-	return gameCharBase_collidedWithChars.call(this, x, y);
-}
-
-// New - Additional collision detections
-Game_CharacterBase.prototype.isCollidedWithFollowers = function(x, y) {
-	if (!this.isFollower()) {
-		const f = $gamePlayer._followers._data;
-		for (let i = 0; i < f.length; i++) {
-			if (f[i].posNt(x, y)) return true;
-		}
-	}
-	return false;
-};
-
-Game_CharacterBase.prototype.isCollidedWithPlayer = function(x, y) {
-	return this.isFollower() && $gamePlayer.posNt(x, y);
-};
 
 // --- GAME FOLLOWER ---
 // Changed so each follower has visibility conditions instead of the group
@@ -426,6 +428,7 @@ BattleGrid_Movement.prototype.initialize = function() {
 	this._unit = null;
 	this._dist = 0;
 	this._grid = new Grid();
+	this._gridLayer = null;
 };
 
 //Quick setUp for both unit and distance however can use get
@@ -433,9 +436,67 @@ BattleGrid_Movement.prototype.setUp = function(unit, distance){
 	this._unit = unit;
 	this._dist = distance;
 	this._grid.addCircleAroundSource(unit.x,unit.y,distance,this.validMoveLoc.bind(this));
+	this._gridLayer = new Sprite_BattleGrid(this._grid);
 };
 
 BattleGrid_Movement.prototype.validMoveLoc = function(x,y){
-	distanceAway = this._unit.getDistanceFrom(x,y)
-	return this._dist >= distanceAway && distanceAway >= 0
+	distanceAway = this._unit.getDistanceFrom(x,y);
+	return this._dist >= distanceAway && distanceAway >= 0;
 }
+
+BattleGrid_Movement.prototype.removeGrid = function() {
+	this._gridLayer.clear(this);
+};
+
+/******************************************************************************
+	Sprite_BattleGrid
+******************************************************************************/
+function Sprite_BattleGrid() {
+	this.initialize(...arguments);
+}
+
+Sprite_BattleGrid.prototype = Object.create(Sprite.prototype);
+Sprite_BattleGrid.prototype.constructor = Sprite_BattleGrid;
+
+Sprite_BattleGrid.prototype.initialize = function(list) {
+	Sprite.prototype.initialize.call(this);
+	const w = $gameMap.width();
+	const h = $gameMap.height();
+	const multX = $gameMap.tileWidth();
+	const multY = $gameMap.tileHeight();
+	this.bitmap = new Bitmap(w * multX, h * multY);
+	
+	for (const grid of list.data) {
+		let x = grid[0];
+		let y = grid[1];
+		if ($gamePlayer.x == x && $gamePlayer.y == y) {
+			this.bitmap.fillRect(1 + x * multX, 1 + y * multY, 46, 46, '#e6de0085');
+		} else {
+			this.bitmap.fillRect(1 + x * multX, 1 + y * multY, 46, 46, '#0099cf85');
+		}
+	}/* -- floating data: Use or delete (fills up entire map)
+	for (let i = 0; i <= w; i++) {
+		for (let j = 0; j <= h; j++) {
+			if ($gameMap.regionId(i,j) > 0) {
+				this.bitmap.fillRect(1 + i * multX, 1 + j * multY, 46, 46, '#0099cf85');
+			} else if (!$gameMap.isPassable(i,j)) {
+				this.bitmap.fillRect(1 + i * multX, 1 + j * multY, 46, 46, '#c70d0035');
+			} else {
+				this.bitmap.fillRect(1 + i * multX, 1 + j * multY, 46, 46, '#00000050');
+			}
+		}
+	}*/
+	this.z = 1;
+	SceneManager._scene._spriteset._tilemap.addChild(this);
+};
+
+Sprite_BattleGrid.prototype.update = function() {
+	this.x = -$gameMap._displayX * $gameMap.tileWidth();
+	this.y = -$gameMap._displayY * $gameMap.tileHeight();
+};
+	
+Sprite_BattleGrid.prototype.clear = function(callBack) {
+	this.bitmap.clear();
+	callBack._gridLayer = null;
+	callBack._grid = new Grid();
+};
