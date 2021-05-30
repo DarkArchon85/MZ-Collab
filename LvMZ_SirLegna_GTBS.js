@@ -347,6 +347,70 @@ betterEval = function(funString, expectedType, args=[]){
 	return expectedType(new Function("return " + funString)(...args))
 }
 
+/******************************************************************************
+	Grid Class
+******************************************************************************/
+function Grid(){
+	this.initialize(...arguments);
+}
+
+Object.defineProperties(Grid.prototype, {
+	// unit
+	data: {
+		get: function() {
+			return this._data;
+		},
+		configurable: true
+	},
+});
+
+Grid.prototype.initialize = function() {
+	this._historicTiles = []
+	this.clear()
+}
+
+Grid.prototype.clear = function(){
+	this._data = [];
+}
+
+/*Creates a grid object based of the unit's position and max distance around them.
+Requirements for Unit:
+* Must be subClass of Game_Character
+Set's the _grid object
+Renders Grid using TileB index 6
+*/
+Grid.prototype.addCircleAroundSource = function(sourceX,sourceY,distance,inGrid){
+	movementSearchLimitFlag = true;
+	for (let x = sourceX - distance; x <= sourceX + distance; x++){
+		for (let y = sourceY - distance; y <= sourceY + distance; y++){
+			if (inGrid(x,y)){
+				this._data.push([x,y])
+			}
+			else{
+			}
+		}
+	}
+	movementSearchLimitFlag = false;	
+}
+
+Grid.prototype.renderGrid = function(){
+	historicTiles = this._historicTiles;
+	this._data.forEach(function(loc){
+		historicTiles.push($dataMap.data[(1 * $dataMap.height + loc[1]) * $dataMap.width + loc[0]]);
+		$dataMap.data[(1 * $dataMap.height + loc[1]) * $dataMap.width + loc[0]] = 6;
+	})
+}
+
+Grid.prototype.deRenderGrid = function(){
+	count = 0;
+	historicTiles = this._historicTiles;
+	this._data.forEach(function(loc){
+		$dataMap.data[(1 * $dataMap.height + loc[1]) * $dataMap.width + loc[0]] = historicTiles[count];
+		count++;
+	})
+	this._historicTiles = []
+}
+
 
 /******************************************************************************
 	BattleGrid_Movement Class
@@ -382,40 +446,21 @@ Object.defineProperties(BattleGrid_Movement.prototype, {
 BattleGrid_Movement.prototype.initialize = function() {
 	this._unit = null;
 	this._dist = 0;
-	this._grid = [];
+	this._grid = new Grid();
 };
 
 //Quick setUp for both unit and distance however can use get
 BattleGrid_Movement.prototype.setUp = function(unit, distance){
 	this._unit = unit;
 	this._dist = distance;
+	this._grid.addCircleAroundSource(unit.x,unit.y,distance,this.validMoveLoc.bind(this));
 };
 
-/*Creates a grid object based of the unit's position and max distance around them.
-Requirements for Unit:
-* Must be subClass of Game_Character
-Set's the _grid object
-Renders Grid using TileB index 6
-*/
-BattleGrid_Movement.prototype.calculateGrid = function(){
-	this._grid = []
-	movementSearchLimitFlag = true;
-	for (let x = this._unit.x - this._dist; x <= this._unit.x + this._dist; x++){
-		for (let y = this._unit.y - this._dist; y <= this._unit.y + this._dist; y++){
-			if (this.inGrid(x,y)){
-				this._grid.push([x,y])
-				$dataMap.data[(1 * $dataMap.height + y) * $dataMap.width + x] = 6
-			}
-			else{
-				$dataMap.data[(1 * $dataMap.height + y) * $dataMap.width + x] = 0
-			}
-		}
-	}
-	movementSearchLimitFlag = false;	
-}
-
-//Calculates if x and y are within maximum distance from the unit
-BattleGrid_Movement.prototype.inGrid = function(x,y){
+BattleGrid_Movement.prototype.validMoveLoc = function(x,y){
 	distanceAway = this._unit.getDistanceFrom(x,y)
 	return this._dist >= distanceAway && distanceAway >= 0
+}
+
+BattleGrid_Movement.prototype.render = function(render){
+	render ? this._grid.renderGrid() : this._grid.deRenderGrid()
 }
