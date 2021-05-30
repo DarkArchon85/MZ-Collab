@@ -217,3 +217,111 @@ Sprite_BattleGrid.prototype.clear = function(callBack) {
 	callBack._gridLayer = null;
 	callBack._grid = new Grid();
 };
+
+/******************************************************************************
+	rmmv_managers.js
+******************************************************************************/
+
+/******************************************************************************
+	rmmv_objects.js
+******************************************************************************/
+
+// --- CHARACTER BASE ---
+//Custom - Calculates the distance between a Game_Character and a goal Tile; returns distance or -1 if not possible
+Game_Character.prototype.getDistanceFrom = function(goalX, goalY) { //Custom
+    const searchLimit = this.searchLimit();
+    const mapWidth = $gameMap.width();
+    const nodeList = [];
+    const openList = [];
+    const closedList = [];
+    const start = {};
+    let best = start;
+
+    if (this.x === goalX && this.y === goalY) {
+        return closedList.length;
+    }
+
+    start.parent = null;
+    start.x = this.x;
+    start.y = this.y;
+    start.g = 0;
+    start.f = $gameMap.distance(start.x, start.y, goalX, goalY);
+    nodeList.push(start);
+    openList.push(start.y * mapWidth + start.x);
+
+    while (nodeList.length > 0) {
+        let bestIndex = 0;
+        for (let i = 0; i < nodeList.length; i++) {
+            if (nodeList[i].f < nodeList[bestIndex].f) {
+                bestIndex = i;
+            }
+        }
+
+        const current = nodeList[bestIndex];
+        const x1 = current.x;
+        const y1 = current.y;
+        const pos1 = y1 * mapWidth + x1;
+        const g1 = current.g;
+
+        nodeList.splice(bestIndex, 1);
+        openList.splice(openList.indexOf(pos1), 1);
+        closedList.push(pos1);
+
+        if (current.x === goalX && current.y === goalY) {
+            best = current;
+            return best.f//(this.x == goalX || this.y == goalY ? openList.length : openList.length);
+        }
+
+        if (g1 >= searchLimit) {
+            continue;
+        }
+
+        for (let j = 0; j < 4; j++) {
+            const direction = 2 + j * 2;
+            const x2 = $gameMap.roundXWithDirection(x1, direction);
+            const y2 = $gameMap.roundYWithDirection(y1, direction);
+            const pos2 = y2 * mapWidth + x2;
+
+            if (closedList.includes(pos2)) {
+                continue;
+            }
+            if (!this.canPass(x1, y1, direction)) {
+                continue;
+            }
+
+            const g2 = g1 + 1;
+            const index2 = openList.indexOf(pos2);
+
+            if (index2 < 0 || g2 < nodeList[index2].g) {
+                let neighbor = {};
+                if (index2 >= 0) {
+                    neighbor = nodeList[index2];
+                } else {
+                    nodeList.push(neighbor);
+                    openList.push(pos2);
+                }
+                neighbor.parent = current;
+                neighbor.x = x2;
+                neighbor.y = y2;
+                neighbor.g = g2;
+                neighbor.f = g2 + $gameMap.distance(x2, y2, goalX, goalY);
+                if (!best || neighbor.f - neighbor.g < best.f - best.g) {
+                    best = neighbor;
+                }
+            }
+        }
+    }
+	return -1;
+}
+
+/******************************************************************************
+	rmmv_scenes.js
+******************************************************************************/
+
+/******************************************************************************
+	rmmv_sprites.js
+******************************************************************************/
+
+/******************************************************************************
+	rmmv_windows.js
+********************
