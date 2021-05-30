@@ -365,7 +365,6 @@ Object.defineProperties(Grid.prototype, {
 });
 
 Grid.prototype.initialize = function() {
-	this._historicTiles = []
 	this.clear()
 }
 
@@ -377,7 +376,6 @@ Grid.prototype.clear = function(){
 Requirements for Unit:
 * Must be subClass of Game_Character
 Set's the _grid object
-Renders Grid using TileB index 6
 */
 Grid.prototype.addCircleAroundSource = function(sourceX,sourceY,distance,inGrid){
 	movementSearchLimitFlag = true;
@@ -392,25 +390,6 @@ Grid.prototype.addCircleAroundSource = function(sourceX,sourceY,distance,inGrid)
 	}
 	movementSearchLimitFlag = false;	
 }
-
-Grid.prototype.renderGrid = function(){
-	historicTiles = this._historicTiles;
-	this._data.forEach(function(loc){
-		historicTiles.push($dataMap.data[(1 * $dataMap.height + loc[1]) * $dataMap.width + loc[0]]);
-		$dataMap.data[(1 * $dataMap.height + loc[1]) * $dataMap.width + loc[0]] = 6;
-	})
-}
-
-Grid.prototype.deRenderGrid = function(){
-	count = 0;
-	historicTiles = this._historicTiles;
-	this._data.forEach(function(loc){
-		$dataMap.data[(1 * $dataMap.height + loc[1]) * $dataMap.width + loc[0]] = historicTiles[count];
-		count++;
-	})
-	this._historicTiles = []
-}
-
 
 /******************************************************************************
 	BattleGrid_Movement Class
@@ -459,8 +438,4 @@ BattleGrid_Movement.prototype.setUp = function(unit, distance){
 BattleGrid_Movement.prototype.validMoveLoc = function(x,y){
 	distanceAway = this._unit.getDistanceFrom(x,y)
 	return this._dist >= distanceAway && distanceAway >= 0
-}
-
-BattleGrid_Movement.prototype.render = function(render){
-	render ? this._grid.renderGrid() : this._grid.deRenderGrid()
 }
