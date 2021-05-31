@@ -149,11 +149,10 @@ BattleGrid_Movement.prototype.initialize = function() {
 };
 
 //Quick setUp for both unit and distance however can use get
-BattleGrid_Movement.prototype.setUp = function(unit, distance){
+BattleGrid_Movement.prototype.addGridAroundUnit = function(unit, distance){
 	this._unit = unit;
 	this._dist = distance;
 	this._grid.addCircleAroundSource(unit.x,unit.y,distance,this.validMoveLoc.bind(this));
-	this._gridLayer = new Sprite_BattleGrid(this._grid);
 };
 
 BattleGrid_Movement.prototype.validMoveLoc = function(x,y){
@@ -161,8 +160,18 @@ BattleGrid_Movement.prototype.validMoveLoc = function(x,y){
 	return this._dist >= distanceAway && distanceAway >= 0;
 }
 
-BattleGrid_Movement.prototype.removeGrid = function() {
-	this._gridLayer.clear(this);
+BattleGrid_Movement.prototype.showGrid = function(){
+	this._gridLayer = new Sprite_BattleGrid(this._grid);
+}
+
+BattleGrid_Movement.prototype.hideGrid = function(){
+	this._gridLayer.clear();
+	this._gridLayer = null;
+}
+
+BattleGrid_Movement.prototype.clearGrid = function() {
+	this.hideGrid()
+	this._grid.clear()
 };
 
 /******************************************************************************
@@ -212,10 +221,8 @@ Sprite_BattleGrid.prototype.update = function() {
 	this.y = -$gameMap._displayY * $gameMap.tileHeight();
 };
 	
-Sprite_BattleGrid.prototype.clear = function(callBack) {
+Sprite_BattleGrid.prototype.clear = function() {
 	this.bitmap.clear();
-	callBack._gridLayer = null;
-	callBack._grid = new Grid();
 };
 
 /******************************************************************************
@@ -324,4 +331,4 @@ Game_Character.prototype.getDistanceFrom = function(goalX, goalY) { //Custom
 
 /******************************************************************************
 	rmmv_windows.js
-********************
+******************************************************************************/
